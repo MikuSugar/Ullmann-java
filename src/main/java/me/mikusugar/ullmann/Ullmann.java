@@ -1,7 +1,9 @@
 package me.mikusugar.ullmann;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author mikusugar
@@ -15,16 +17,45 @@ public class Ullmann
 
     private final int[][] m0Matrix;
 
+    private List<String>[] largeTag;
+
+    private List<String>[] searchTag;
+
     public Ullmann(int[][] largeGraphMatrix, int[][] searchGraphMatrix)
+    {
+        checkMatrix(largeGraphMatrix, searchGraphMatrix);
+        this.largeGraphMatrix = largeGraphMatrix;
+        this.searchGraphMatrix = searchGraphMatrix;
+
+        m0Matrix = creatM0Matrix();
+    }
+
+    public Ullmann(int[][] largeGraphMatrix, List<String>[] largeTag, int[][] searchGraphMatrix,
+            List<String>[] searchTag)
+    {
+        checkMatrix(largeGraphMatrix, searchGraphMatrix);
+        if (largeTag == null || searchTag == null || largeTag.length != largeGraphMatrix.length || searchTag.length != searchGraphMatrix.length)
+        {
+            throw new IllegalArgumentException("标签不合法");
+        }
+
+        this.largeGraphMatrix = largeGraphMatrix;
+        this.searchGraphMatrix = searchGraphMatrix;
+        this.largeTag = largeTag;
+        this.searchTag = searchTag;
+        m0Matrix = creatM0Matrix();
+    }
+
+    private static void checkMatrix(int[][] largeGraphMatrix, int[][] searchGraphMatrix)
     {
         if (largeGraphMatrix == null || searchGraphMatrix == null)
         {
             throw new IllegalArgumentException("参数不为空");
         }
-        this.largeGraphMatrix = largeGraphMatrix;
-        this.searchGraphMatrix = searchGraphMatrix;
-
-        m0Matrix = creatM0Matrix();
+        if (largeGraphMatrix.length != largeGraphMatrix[0].length || searchGraphMatrix.length != searchGraphMatrix[0].length)
+        {
+            throw new IllegalArgumentException("矩阵不合法");
+        }
     }
 
     public List<int[][]> cal()
@@ -108,10 +139,27 @@ public class Ullmann
             {
                 final int l = getDegree(j, largeGraphMatrix);
                 final int s = getDegree(i, searchGraphMatrix);
-                res[i][j] = l >= s ? 1 : 0;
+                res[i][j] = l >= s && checkTag(i, j) ? 1 : 0;
             }
         }
         return res;
+    }
+
+    private boolean checkTag(int searchI, int largeJ)
+    {
+        if (largeTag == null || searchTag == null)
+        {
+            return true;
+        }
+        final Set<String> lTags = new HashSet<>(largeTag[largeJ]);
+        for (String s : searchTag[searchI])
+        {
+            if (!lTags.contains(s))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -129,6 +177,5 @@ public class Ullmann
         }
         return res;
     }
-
 
 }
